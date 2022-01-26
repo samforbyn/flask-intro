@@ -13,6 +13,10 @@ AWESOMENESS = [
     'oh-so-not-meh', 'brilliant', 'ducky', 'coolio', 'incredible',
     'wonderful', 'smashing', 'lovely']
 
+MEANNESS = [
+    'stinky', 'warty', 'lame', 'covered in boils', 'a CLOWN',
+    'blander than oatmeal', 'the absolute worst', 'an utter fool',
+    'the least stealthy ninja ever']
 
 @app.route('/')
 def start_here():
@@ -23,7 +27,7 @@ def start_here():
 
 @app.route('/hello')
 def say_hello():
-    """Say hello and prompt for user's name."""
+    """Say hello and prompt for compliments."""
 
     return """
     <!doctype html>
@@ -33,29 +37,166 @@ def say_hello():
       </head>
       <body>
         <h1>Hi There!</h1>
-        <form action="/greet" method='GET'>
-          What's your name? <input type="text" name="person">
-          What compliment would you like?
-          <input type="radio" name="compliment" value="awesome">Awesome<br>
-          <input type="radio" name="compliment" value="terrific">Terrific<br>
-          <input type="radio" name="compliment" value="fantastic">Fantastic<br>
-          <input type="radio" name="compliment" value="neato">Neato<br>
-          <input type="radio" name="compliment" value="fantabulous">Fantabulous<br>
-          <input type="radio" name="compliment" value="wowza">Wowza<br>
-          <input type="radio" name="compliment" value="oh-so-not-meh">Oh-so-not-meh<br>
-          <input type="radio" name="compliment" value="brilliant">Brilliant<br>
-          <input type="radio" name="compliment" value="ducky">Ducky<br>
-          <input type="radio" name="compliment" value="coolio">Coolio<br>
-          <input type="radio" name="compliment" value="incredible">Incredible<br>
-          <input type="radio" name="compliment" value="wonderful">Wonderful<br>
-          <input type="radio" name="compliment" value="smashing">Smashing<br>
-          <input type="radio" name="compliment" value="lovely">Lovely<br>
-          <input type="submit" value="Submit">
+        <form action='/process-hello'>
+          Would you rather be complimented or insulted?
+          <input type="radio" name="niceormean" value="nice">A compliment, please!
+          <input type="radio" name="niceormean" value="mean">I'll take an insult, strawmucher!.
+          <input type="submit">
         </form>
       </body>
     </html>
     """
+@app.route('/process-hello')
+def process_hello():
+    """Decide whether to send the user to choose insults or compliments."""
 
+    nice_or_mean = request.args.get("niceormean")
+
+    if nice_or_mean == "mean":
+        levels_form = """
+        <!doctype html>
+        <html>
+          <head>
+            <title>Insult Level</title>
+          </head>
+          <body>
+            <h2>Choose Your Insult Level:</h2>
+            <form action="/select/insult">
+              <select name="level">
+                <option value="1">Only a little bit.</option>
+                <option value="2">I'd like my insult to be medium-meanness.</option>
+                <option value="3">Do your worst!</option>
+              </select>
+              <br>
+              <input type="submit">
+            </form>
+          </body>
+        </html>
+        """
+
+    elif nice_or_mean == "nice":
+        levels_form = """
+        <!doctype html>
+        <html>
+          <head>
+            <title>Compliment Level</title>
+          </head>
+          <body>
+            <h2>Choose Your Compliment Level:</h2>
+            <form action="/select/compliment">
+              <select name="level">
+                <option value="1">Just say something nice.</option>
+                <option value="2">I'd like a middle-of-the-road compliment.</option>
+                <option value="3">Say something really flattering!</option>
+              </select>
+              <br>
+              <input type="submit">
+            </form>
+          </body>
+        </html>
+        """
+
+    return levels_form
+
+
+@app.route('/select/insult')
+def display_insult_form():
+    """Let the user choose their insult level."""
+
+    level = int(request.args.get("level"))
+
+    # Generate HTML options, so we don't have to create each one by hand. (You
+    # could also write a helper function and call it.)
+
+    option_template = '<option value="{insult}">{insult}</option>'
+    if level == 1:
+        option_elements = [
+            option_template.format(insult=insult) for insult in MEANNESS[:3]
+        ]
+
+    elif level == 2:
+        option_elements = [
+            option_template.format(insult=insult) for insult in MEANNESS[3:6]
+        ]
+
+    else:
+        option_elements = [
+            option_template.insult(insult=insult) for insult in MEANNESS[6:]
+        ]
+
+    return f"""
+    <!doctype html>
+    <html>
+      <head>
+        <title>Choose Insult</title>
+      </head>
+      <body>
+        <h1>Oh. It's You.</h1>
+
+        <h3>Fill out this dinky form and choose something rude.</h3>
+        
+        <form action="/diss">
+          What's your name? <input type="text" name="person">
+          Choose an insult:
+          <select name="insult">
+            {option_elements}
+          </select>
+          <input type="submit" value="Take Me to My Insult!">
+        </form>
+
+      </body>
+    </html>
+    """
+
+
+@app.route('/select/compliment')
+def display_compliment_form():
+    """Let the user choose a compliment level."""
+
+    level = int(request.args.get("level"))
+
+    # Generate HTML options, so we don't have to create each one by hand. (You
+    # could also write a helper function and call it.)
+
+    option_template = '<option value="{comp}">{comp}</option>'
+    if level == 1:
+        option_elements = [
+            option_template.format(comp=comp) for comp in AWESOMENESS[:3]
+        ]
+
+    elif level == 2:
+        option_elements = [
+            option_template.format(comp=comp) for comp in AWESOMENESS[3:6]
+        ]
+
+    else:
+        option_elements = [
+            option_template.format(comp=comp) for comp in AWESOMENESS[6:]
+        ]
+
+    return f"""
+    <!doctype html>
+    <html>
+      <head>
+        <title>Choose Compliment</title>
+      </head>
+      <body>
+        <h1>Hooray, It's You!</h1>
+
+        <h3>Fill out this lil form and choose your compliment. :)</h3>
+        
+        <form action="/greet">
+          What's your name? <input type="text" name="person">
+          Choose a compliment:
+          <select name="compliment">
+            {option_elements}
+          </select>
+          <input type="submit" value="Take Me to My Compliment!">
+        </form>
+
+      </body>
+    </html>
+    """
 
 @app.route('/greet')
 def greet_person():
@@ -76,6 +217,27 @@ def greet_person():
       </body>
     </html>
     """
+
+@app.route('/diss')
+def diss_person():
+  """Get name and insult to return a diss"""
+  player = request.args.get("person")
+  insult = request.args.get("insult")
+
+  return f"""
+  <!doctype html>
+  <html>
+    <head>
+      <title>Uh... what smells?</title>
+    </head>
+    <body>
+      <h1>
+        Oh hey, {player} I think that you are {insult}! Hahaha! >:D
+      </h1>
+    </body>
+  </html>
+  
+  """
 
 
 if __name__ == '__main__':
